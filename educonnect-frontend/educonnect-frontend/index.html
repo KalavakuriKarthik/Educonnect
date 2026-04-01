@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduConnect – Login</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body class="auth-page">
+
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
+    <h2>EduConnect</h2>
+    <p>Digital Education &amp; E-Learning Governance</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="auth-tabs">
+    <div class="auth-tab active" id="tab-login"    onclick="switchTab('login')">Login</div>
+    <div class="auth-tab"        id="tab-register" onclick="switchTab('register')">Register</div>
+  </div>
+
+  <!-- LOGIN FORM -->
+  <form id="login-form" onsubmit="doLogin(event)">
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" id="l-email" class="form-control" placeholder="you@example.com" required/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" id="l-password" class="form-control" placeholder="••••••••" required/>
+    </div>
+    <button type="submit" id="login-btn" class="btn-primary-ec" style="width:100%;justify-content:center;padding:12px">
+      <i class="fas fa-sign-in-alt"></i> Login
+    </button>
+    <div id="login-error" style="color:var(--danger);font-size:.85rem;margin-top:10px;text-align:center"></div>
+  </form>
+
+  <!-- REGISTER FORM -->
+  <form id="register-form" style="display:none" onsubmit="doRegister(event)">
+    <div class="form-group">
+      <label class="form-label">Full Name</label>
+      <input type="text" id="r-name" class="form-control" placeholder="John Doe" required/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" id="r-email" class="form-control" placeholder="you@example.com" required/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Phone</label>
+      <input type="text" id="r-phone" class="form-control" placeholder="+91 9876543210"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Role</label>
+      <select id="r-role" class="form-select" required>
+        <option value="">Select role…</option>
+        <option value="STUDENT">Student</option>
+        <option value="TEACHER">Teacher</option>
+        <option value="SCHOOL_ADMIN">School Admin</option>
+        <option value="PROGRAM_MANAGER">Program Manager</option>
+        <option value="COMPLIANCE_OFFICER">Compliance Officer</option>
+        <option value="GOVERNMENT_AUDITOR">Government Auditor</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" id="r-password" class="form-control" placeholder="Min 6 characters" required minlength="6"/>
+    </div>
+    <button type="submit" id="reg-btn" class="btn-accent-ec" style="width:100%;justify-content:center;padding:12px">
+      <i class="fas fa-user-plus"></i> Create Account
+    </button>
+    <div id="reg-error" style="color:var(--danger);font-size:.85rem;margin-top:10px;text-align:center"></div>
+  </form>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+  // Redirect if already logged in
+  Auth.redirectIfLoggedIn();
+
+  function switchTab(tab) {
+    document.getElementById('login-form').style.display    = tab==='login'    ? 'block' : 'none';
+    document.getElementById('register-form').style.display = tab==='register' ? 'block' : 'none';
+    document.getElementById('tab-login').classList.toggle('active',    tab==='login');
+    document.getElementById('tab-register').classList.toggle('active', tab==='register');
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    setLoading(btn, true, '<i class="fas fa-sign-in-alt"></i> Login');
+    document.getElementById('login-error').textContent = '';
+    try {
+      const data = await AuthAPI.login({
+        email   : document.getElementById('l-email').value.trim(),
+        password: document.getElementById('l-password').value,
+      });
+      Auth.setSession(data);
+      showToast('Login successful! Redirecting…', 'success');
+      setTimeout(() => { window.location.href = roleDashboard(data.role); }, 800);
+    } catch(err) {
+      document.getElementById('login-error').textContent = err.message;
+    } finally {
+      setLoading(btn, false, '<i class="fas fa-sign-in-alt"></i> Login');
+    }
+  }
+
+  async function doRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('reg-btn');
+    setLoading(btn, true, '<i class="fas fa-user-plus"></i> Create Account');
+    document.getElementById('reg-error').textContent = '';
+    try {
+      const data = await AuthAPI.register({
+        name    : document.getElementById('r-name').value.trim(),
+        email   : document.getElementById('r-email').value.trim(),
+        password: document.getElementById('r-password').value,
+        phone   : document.getElementById('r-phone').value.trim(),
+        role    : document.getElementById('r-role').value,
+      });
+      Auth.setSession(data);
+      showToast('Account created! Redirecting…', 'success');
+      setTimeout(() => { window.location.href = roleDashboard(data.role); }, 800);
+    } catch(err) {
+      document.getElementById('reg-error').textContent = err.message;
+    } finally {
+      setLoading(btn, false, '<i class="fas fa-user-plus"></i> Create Account');
+    }
+  }
+</script>
+</body>
+</html>
